@@ -1,0 +1,5 @@
+# Tout ignorer par défaut...
+*
+# ...sauf les notebooks et ce fichier
+!.gitignore
+!*.ipynb
