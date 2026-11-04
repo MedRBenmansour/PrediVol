@@ -1,5 +1,6 @@
 # Tout ignorer par défaut...
 *
-# ...sauf les notebooks et ce fichier
+# ...sauf les notebooks, le README et ce fichier
 !.gitignore
+!README.md
 !*.ipynb
