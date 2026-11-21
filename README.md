@@ -17,7 +17,7 @@ Les expériences de modélisation sont suivies avec **MLflow**, hébergé sur **
 
 | Fichier | Rôle |
 |---|---|
-| `PrediVol.ipynb` | Notebook principal : données, exploration, préparation, modèles et suivi MLflow |
+| `PrediVol.ipynb` | Notebook principal : données, exploration, préparation, modèles, optimisation et suivi MLflow |
 | `PrediVol_avant_mlflow.ipynb` | Version du notebook avant l'ajout de MLflow |
 
 Les données ne sont pas versionnées (trop volumineuses). Elles viennent du jeu Kaggle [2023 US Civil Flights, Delay, Meteo and Aircraft](https://www.kaggle.com/datasets/bordanova/2023-us-civil-flights-delay-meteo-and-aircraft), téléchargé automatiquement par le notebook avec `kagglehub`.
@@ -25,7 +25,8 @@ Les données ne sont pas versionnées (trop volumineuses). Elles viennent du jeu
 ## Démarche
 
 1. **Jalon 1** : collecte, exploration, jointure de la météo, variables dérivées (effet domino, trafic prévu, jours fériés), dictionnaire de données et nettoyage.
-2. **Jalon 2** : prétraitement, séparation entraînement / validation / test (70 / 15 / 15), modèles de référence naïfs, puis Ridge, forêt aléatoire et gradient boosting.
+2. **Jalon 2** : prétraitement, séparation entraînement / validation / test (70 / 15 / 15), modèles de référence naïfs, puis Ridge, forêt aléatoire, gradient boosting et XGBoost.
+3. **Optimisation** (partie 3) : nouvelles variables (route, compagnie × aéroport, aéroport × moment, charge relative, météo difficile) avec encodage par la cible, recherche aléatoire d'hyperparamètres avec validation croisée groupée par jour, choix du modèle final, évaluation unique sur le test et intervalle de prédiction 10–90 % (régression quantile).
 
 ## Suivi des expériences avec MLflow
 
@@ -34,6 +35,8 @@ Chaque exécution crée sur DagsHub :
 - un **run parent** « comparaison … » avec les paramètres globaux, les figures et le journal des expériences ;
 - un **run enfant par modèle** avec ses hyperparamètres et ses métriques de validation (MAE, RMSE, R², capture des gros retards, temps d'entraînement et de prédiction) ;
 - le **meilleur modèle**, sauvegardé avec sa signature et enregistré dans le Model Registry sous le nom `PrediVol`.
+
+La partie 3 envoie ses runs dans une seconde expérience, **« PrediVol – optimisation »** : un run par essai de la recherche d'hyperparamètres, un run par modèle optimisé, et le **modèle final** enregistré comme nouvelle version de `PrediVol`.
 
 ## Relancer le notebook
 
@@ -51,5 +54,5 @@ Pour charger le modèle enregistré :
 import mlflow, dagshub
 
 dagshub.init(repo_owner="MedRBenmansour", repo_name="PrediVol", mlflow=True)
-modele = mlflow.pyfunc.load_model("models:/PrediVol/1")
+modele = mlflow.pyfunc.load_model("models:/PrediVol/latest")   # ou un numéro de version, ex. /1
 ```
