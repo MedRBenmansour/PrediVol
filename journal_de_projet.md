@@ -22,6 +22,9 @@ Réglages (recherche aléatoire du Jalon 2, section 25) : loss = absolute_error,
 | 24 nov. | Météo facultative dans /predict | Les prévisions ne sont pas toujours disponibles ; le modèle gère les valeurs manquantes |
 | 24 nov. | Docker : python:3.13-slim, utilisateur non root, HEALTHCHECK, port 8080 | Bonnes pratiques du module (image légère, sécurité, surveillance) |
 | 24 nov. | Lancement avec `-p 8081:8080` sur notre poste | Le port 8080 était déjà pris par un autre projet |
+| 25 nov. | Relecture du README par le 2e membre de l'équipe, sur un autre poste | Vérifier que le projet se relance sans aide (checklist 5.3) ; README complété |
+| 25 nov. | Ajout d'un 6e test : temps de réponse < 1 s | Vérifier automatiquement le critère de latence |
+| 25 nov. | Ajout de `test_predictions.py` (19 tests) | Vérifier que les prédictions sont correctes, stables et réagissent dans le bon sens (météo), et que les cas limites sont gérés |
 
 ## Seuils et critères Go / No-Go
 
@@ -29,9 +32,19 @@ Réglages (recherche aléatoire du Jalon 2, section 25) : loss = absolute_error,
 |---|---|---|---|
 | MAE sur le test | ≤ 23,1 min (contrat) | 21,48 min | Go |
 | Gain vs modèle naïf | ≥ 10 % | 17,5 % | Go |
-| Tests de l'API | 5 / 5 | 5 / 5 | Go |
-| Temps de prédiction | < 1 s par requête | 0,2 s (1re requête dans Docker : 2,4 s) | Go |
+| Tests de l'API | 25 / 25 | 25 / 25 | Go |
+| Temps de prédiction | < 1 s par requête | 0,08 à 0,2 s (1re requête dans Docker : 2,4 s) | Go |
 | Capture des retards ≥ 60 min | ≥ 36 % | 31,5 % | À améliorer (pas bloquant pour un prototype) |
+
+## ✅ Checklist de validation
+
+| | Critère | Preuve |
+|---|---|---|
+| ✅ | L'API répond à /health, /ready, /predict | Testé en local (uvicorn) et dans Docker (`predivol-api:v1`) ; /health et /ready : 200 ; /predict : 200, ATL→LGA Delta soir → 4,7 min (−16,8 à 47,7), risque modéré |
+| ✅ | Tous les tests passent | `pytest` : 25 / 25 — 6 tests des endpoints (`test_api.py`) et 19 tests des prédictions (`test_predictions.py`) |
+| ✅ | Temps de réponse acceptable | `duree_ms` : 77,8 ms dans Docker et environ 200 ms en local après la 1re requête (1re requête : 0,8 à 2,4 s, chargement) ; test `test_latence` : < 1 s |
+| ✅ | Erreurs gérées proprement | 422 si données invalides (Pydantic, test `test_predict_invalide`) ; 503 si modèle non chargé (/ready, /predict) ; 500 avec message si la prédiction échoue ; erreurs écrites dans les logs |
+| ✅ | README testé par quelqu'un d'autre | 25 nov. : Mohamed a suivi le README sur son propre poste Windows (venv, tests, API, Docker), sans aide de l'auteure. Ajouts faits au README après ce test : installer Python 3.13 s'il manque, démarrer Docker Desktop avant `docker build`, `/` renvoie 404 (utiliser /docs), `--env-file .env` facultatif |
 
 ## Risques du déploiement et mesures
 

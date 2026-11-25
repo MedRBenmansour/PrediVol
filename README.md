@@ -29,6 +29,8 @@ journal_de_projet.md   choix, versions et décisions
 ## Lancer l'API en local
 
 Python **3.13** est obligatoire (même version que l'entraînement du modèle).
+Vérifier avec `py -0` : la liste doit contenir `-V:3.13`. Sinon, l'installer :
+`winget install -e --id Python.Python.3.13` (ou depuis python.org), puis rouvrir PowerShell.
 
 ```powershell
 py -V:3.13 -m venv .venv-api
@@ -37,7 +39,8 @@ pip install -r requirements.txt pytest httpx
 uvicorn app.main:app --port 8080
 ```
 
-Ouvrir http://localhost:8080/docs.
+Ouvrir http://localhost:8080/docs (la racine `/` renvoie 404, c'est normal).
+L'installation (mlflow, scipy…) prend plusieurs minutes : ne pas l'interrompre.
 
 ## Tester
 
@@ -45,9 +48,15 @@ Ouvrir http://localhost:8080/docs.
 python -m pytest -q test
 ```
 
-5 tests : `/health`, `/ready`, prédiction valide, prédiction sans météo, données invalides (erreur 422).
+25 tests :
+- `test_api.py` (6) : `/health`, `/ready`, prédiction valide, prédiction sans météo, données invalides (erreur 422), temps de réponse (< 1 s) ;
+- `test_predictions.py` (19) : valeur de référence, structure et plausibilité de la réponse, plusieurs vols, effet de la météo, cohérence du risque, valeurs inconnues, 1000 vols, 8 cas de données invalides (422).
+
+`python -m pytest -v test` affiche le détail test par test.
 
 ## Lancer avec Docker
+
+**Démarrer Docker Desktop d'abord** et attendre « Engine running » (sinon : `failed to connect to the docker API … dockerDesktopLinuxEngine`). Vérifier avec `docker version` (section *Server* présente).
 
 ```powershell
 docker build -t predivol-api:v1 .
@@ -55,6 +64,7 @@ docker run --rm -p 8080:8080 --env-file .env predivol-api:v1
 ```
 
 Si le port 8080 est déjà utilisé : `-p 8081:8080`, puis ouvrir http://localhost:8081/docs.
+Sans fichier `.env` (modèle local, cas par défaut), retirer `--env-file .env`.
 
 ## Faire une prédiction
 

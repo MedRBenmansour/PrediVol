@@ -41,3 +41,9 @@ def test_predict_invalide():
     with TestClient(app) as client:
         r = client.post("/predict", json={"vols": [{"compagnie": "Delta"}]})   # champs obligatoires manquants
         assert r.status_code == 422
+
+def test_latence():
+    with TestClient(app) as client:
+        client.post("/predict", json={"vols": [VOL]})            # 1re requête : le modèle « chauffe »
+        r = client.post("/predict", json={"vols": [VOL]})
+        assert r.status_code == 200 and r.json()["duree_ms"] < 1000   # seuil Go / No-Go : < 1 s
