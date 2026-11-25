@@ -1,6 +1,29 @@
-# Tout ignorer par défaut...
-*
-# ...sauf les notebooks, le README et ce fichier
-!.gitignore
-!README.md
-!*.ipynb
+# Données (trop lourdes pour GitHub : le notebook les télécharge depuis Kaggle)
+*.parquet
+*.csv
+data/
+donnees/
+
+# Fichiers produits par le notebook
+figures/
+figures_jalon2/
+*.zip
+
+# MLflow local et Python
+mlruns/
+__pycache__/
+.ipynb_checkpoints/
+.env
+
+# Environnements virtuels
+.venv/
+.venv-api/
+
+# Fichiers locaux à ne pas versionner
+mlflow.db
+/modele_final.joblib
+*.pdf
+*.docx
+Lien Dagshub.txt
+PrediVol_ma_version_21nov.ipynb
+README_jalon2.md

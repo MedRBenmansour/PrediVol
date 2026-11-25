@@ -1,0 +1,12 @@
+# Environnement Python du projet PrédiVol (testé avec Python 3.10+ / Google Colab)
+numpy>=1.26
+pandas>=2.1
+pyarrow>=14.0
+matplotlib>=3.8
+seaborn>=0.13
+scikit-learn>=1.4
+xgboost>=2.0
+holidays>=0.40
+kagglehub>=0.2
+mlflow>=2.12
+dagshub>=0.3

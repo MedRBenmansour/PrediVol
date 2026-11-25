@@ -1,0 +1,17 @@
+# Environnements Python et Git
+.venv/
+.venv-api/
+.git/
+__pycache__/
+*.pyc
+
+# Secrets (passés au lancement avec --env-file, jamais dans l'image)
+.env
+
+# Fichiers inutiles pour faire tourner l'API
+notebooks/
+test/
+PrediVol.ipynb
+*.zip
+mlruns/
+figures*/

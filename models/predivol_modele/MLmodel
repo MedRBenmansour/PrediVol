@@ -1,0 +1,65 @@
+flavors:
+  python_function:
+    artifacts:
+      modele:
+        path: artifacts/modele_final.joblib
+        uri: artefacts/modele_final.joblib
+      q10:
+        path: artifacts/modele_q10.joblib
+        uri: artefacts/modele_q10.joblib
+      q90:
+        path: artifacts/modele_q90.joblib
+        uri: artefacts/modele_q90.joblib
+    cloudpickle_version: 3.1.2
+    code: null
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.13.16
+    streamable: false
+is_signature_from_type_hint: false
+metadata:
+  mae_test_min: 21.48
+  mae_validation_min: 20.97
+  modele: "Gradient boosting (perte absolue) + r\xE9gression quantile 10 %/90 %"
+mlflow_version: 3.18.0
+model_id: null
+model_size_bytes: 91770906
+model_uuid: 54375c59c3534b0fbc7391ab32234ba6
+prompts: null
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "string", "name": "Airline", "required": true}, {"type": "string",
+    "name": "Dep_Airport", "required": true}, {"type": "string", "name": "Arr_Airport",
+    "required": true}, {"type": "string", "name": "DepTime_label", "required": true},
+    {"type": "string", "name": "Distance_type", "required": true}, {"type": "string",
+    "name": "Manufacturer", "required": true}, {"type": "string", "name": "Model",
+    "required": true}, {"type": "double", "name": "mois", "required": true}, {"type":
+    "double", "name": "jour_semaine", "required": true}, {"type": "double", "name":
+    "Aicraft_age", "required": true}, {"type": "double", "name": "vols_jour_avion",
+    "required": true}, {"type": "double", "name": "trafic_dep_jour", "required": true},
+    {"type": "double", "name": "trafic_arr_jour", "required": true}, {"type": "double",
+    "name": "jours_ferie", "required": true}, {"type": "double", "name": "tavg_dep",
+    "required": true}, {"type": "double", "name": "tmin_dep", "required": true}, {"type":
+    "double", "name": "tmax_dep", "required": true}, {"type": "double", "name": "prcp_dep",
+    "required": true}, {"type": "double", "name": "snow_dep", "required": true}, {"type":
+    "double", "name": "wdir_dep", "required": true}, {"type": "double", "name": "wspd_dep",
+    "required": true}, {"type": "double", "name": "pres_dep", "required": true}, {"type":
+    "double", "name": "tavg_arr", "required": true}, {"type": "double", "name": "tmin_arr",
+    "required": true}, {"type": "double", "name": "tmax_arr", "required": true}, {"type":
+    "double", "name": "prcp_arr", "required": true}, {"type": "double", "name": "snow_arr",
+    "required": true}, {"type": "double", "name": "wdir_arr", "required": true}, {"type":
+    "double", "name": "wspd_arr", "required": true}, {"type": "double", "name": "pres_arr",
+    "required": true}]'
+  outputs: '[{"type": "double", "name": "retard_prevu_min", "required": true}, {"type":
+    "double", "name": "borne_basse_min", "required": true}, {"type": "double", "name":
+    "borne_haute_min", "required": true}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2026-11-24 02:05:35.686910'

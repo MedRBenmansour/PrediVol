@@ -1,58 +1,85 @@
-# PrédiVol : prédiction des retards de vols
+# PrédiVol – Prédire le retard d'un vol avant le départ
 
-PrédiVol prédit le **retard à l'arrivée (en minutes)** des vols intérieurs américains de 2023, uniquement à partir d'informations **connues avant le départ** : compagnie, aéroports, horaire, avion, trafic prévu, jours fériés et météo.
+Projet IA du groupe 7 (Mohamed Ridha Benmansour et Mariem Gnichi) – Collège La Cité, automne 2026.
 
-Les expériences de modélisation sont suivies avec **MLflow**, hébergé sur **DagsHub**.
+PrédiVol prédit, **avant le départ**, le retard d'un vol à l'arrivée (en minutes), avec une fourchette 10 %–90 %.
+Client fictif : Air Numidia (planificateurs du centre de contrôle des opérations).
 
-## Liens
+- Données : vols intérieurs américains 2023 (Kaggle, *US 2023 Civil Flights, Delays, Meteo and Aircrafts*)
+- Modèle final : gradient boosting (perte absolue), MAE de **21,5 min** sur le test (naïf : 26,0 min, soit 17,5 % de mieux)
+- Suivi des expériences : https://dagshub.com/gnichimariem1-cell/predivol.mlflow
+- Modèle enregistré : `models:/predivol-retard-arrivee/1` (registre MLflow) et `models/predivol_modele/` (local)
 
-| | |
-|---|---|
-| **Interface MLflow (publique)** | https://dagshub.com/MedRBenmansour/PrediVol.mlflow |
-| Dépôt DagsHub | https://dagshub.com/MedRBenmansour/PrediVol |
-| Expériences | https://dagshub.com/MedRBenmansour/PrediVol/experiments |
-| Modèle enregistré | https://dagshub.com/MedRBenmansour/PrediVol/models |
+## Structure du projet
 
-## Contenu
-
-| Fichier | Rôle |
-|---|---|
-| `PrediVol.ipynb` | Notebook principal : données, exploration, préparation, modèles, optimisation et suivi MLflow |
-| `PrediVol_avant_mlflow.ipynb` | Version du notebook avant l'ajout de MLflow |
-
-Les données ne sont pas versionnées (trop volumineuses). Elles viennent du jeu Kaggle [2023 US Civil Flights, Delay, Meteo and Aircraft](https://www.kaggle.com/datasets/bordanova/2023-us-civil-flights-delay-meteo-and-aircraft), téléchargé automatiquement par le notebook avec `kagglehub`.
-
-## Démarche
-
-1. **Jalon 1** : collecte, exploration, jointure de la météo, variables dérivées (effet domino, trafic prévu, jours fériés), dictionnaire de données et nettoyage.
-2. **Jalon 2** : prétraitement, séparation entraînement / validation / test (70 / 15 / 15), modèles de référence naïfs, puis Ridge, forêt aléatoire, gradient boosting et XGBoost.
-3. **Optimisation** (partie 3) : nouvelles variables (route, compagnie × aéroport, aéroport × moment, charge relative, météo difficile) avec encodage par la cible, recherche aléatoire d'hyperparamètres avec validation croisée groupée par jour, choix du modèle final, évaluation unique sur le test et intervalle de prédiction 10–90 % (régression quantile).
-
-## Suivi des expériences avec MLflow
-
-Chaque exécution crée sur DagsHub :
-
-- un **run parent** « comparaison … » avec les paramètres globaux, les figures et le journal des expériences ;
-- un **run enfant par modèle** avec ses hyperparamètres et ses métriques de validation (MAE, RMSE, R², capture des gros retards, temps d'entraînement et de prédiction) ;
-- le **meilleur modèle**, sauvegardé avec sa signature et enregistré dans le Model Registry sous le nom `PrediVol`.
-
-La partie 3 envoie ses runs dans une seconde expérience, **« PrediVol – optimisation »** : un run par essai de la recherche d'hyperparamètres, un run par modèle optimisé, et le **modèle final** enregistré comme nouvelle version de `PrediVol`.
-
-## Relancer le notebook
-
-```bash
-pip install mlflow dagshub scikit-learn skops pandas kagglehub
+```
+app/main.py            API FastAPI : endpoints /health, /ready, /predict
+app/model_loader.py    chargement du modèle MLflow (mlflow.pyfunc.load_model)
+app/utils.py           schéma d'un vol et préparation des données
+models/predivol_modele modèle sérialisé avec MLflow (pyfunc)
+test/test_api.py       tests de l'API (pytest)
+notebooks/             dépendances du notebook
+PrediVol.ipynb         données, modèles, optimisation (Jalons 1 et 2), sérialisation (sections 30 à 32)
+requirements.txt       dépendances de l'API, versions épinglées
+Dockerfile             image Docker de l'API
+journal_de_projet.md   choix, versions et décisions
+.env                   secrets (non versionné)
 ```
 
-Ouvrez ensuite `PrediVol.ipynb` (Jupyter, VS Code ou Colab) et exécutez les cellules dans l'ordre. Au premier appel de `dagshub.init`, un lien de connexion s'affiche : ouvrez-le pour autoriser l'accès. Vous pouvez aussi définir la variable d'environnement `DAGSHUB_USER_TOKEN` avec un token DagsHub.
+## Lancer l'API en local
 
-Pour suivre les expériences dans **votre propre** dépôt, remplacez `repo_owner` et `repo_name` dans l'appel `dagshub.init(...)`.
+Python **3.13** est obligatoire (même version que l'entraînement du modèle).
 
-Pour charger le modèle enregistré :
+```powershell
+py -V:3.13 -m venv .venv-api
+.venv-api\Scripts\activate
+pip install -r requirements.txt pytest httpx
+uvicorn app.main:app --port 8080
+```
 
-```python
-import mlflow, dagshub
+Ouvrir http://localhost:8080/docs.
 
-dagshub.init(repo_owner="MedRBenmansour", repo_name="PrediVol", mlflow=True)
-modele = mlflow.pyfunc.load_model("models:/PrediVol/latest")   # ou un numéro de version, ex. /1
+## Tester
+
+```powershell
+python -m pytest -q test
+```
+
+5 tests : `/health`, `/ready`, prédiction valide, prédiction sans météo, données invalides (erreur 422).
+
+## Lancer avec Docker
+
+```powershell
+docker build -t predivol-api:v1 .
+docker run --rm -p 8080:8080 --env-file .env predivol-api:v1
+```
+
+Si le port 8080 est déjà utilisé : `-p 8081:8080`, puis ouvrir http://localhost:8081/docs.
+
+## Faire une prédiction
+
+`POST /predict` :
+
+```json
+{"vols": [{
+  "date_vol": "2023-07-14", "compagnie": "Delta Air Lines Inc",
+  "aeroport_depart": "ATL", "aeroport_arrivee": "LGA",
+  "moment_depart": "Evening", "categorie_distance": "Short Haul >1500Mi",
+  "vols_jour_avion": 4, "trafic_depart_jour": 950, "trafic_arrivee_jour": 520
+}]}
+```
+
+Réponse :
+
+```json
+{"predictions": [{"retard_prevu_min": 4.7, "borne_basse_min": -16.8, "borne_haute_min": 47.7, "risque": "modéré"}]}
+```
+
+## Fichier .env
+
+```
+MODEL_URI=models/predivol_modele
+# MODEL_URI=models:/predivol-retard-arrivee/1
+DAGSHUB_USER=gnichimariem1-cell
+DAGSHUB_TOKEN=votre_jeton
 ```
